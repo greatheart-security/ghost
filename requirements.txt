@@ -1,0 +1,7 @@
+subprocess
+argparse
+netifaces
+pandas
+tabulate
+time
+nmap
