@@ -6,6 +6,7 @@ import pandas as pd
 from tabulate import tabulate
 import time
 import nmap
+from socket import getservbyname, getservbyport
 
 
 parser = argparse.ArgumentParser()
@@ -46,7 +47,7 @@ def getLocalIp():
                     x = int(input('Number: '))
                     if x > 0 and x <= len(addresses.index):
                         return(addresses.iloc[x-1]['IP'])
-                        break;
+                        break
                     else:
                         print('Please input a valid interface...')
                 except ValueError:
@@ -70,38 +71,89 @@ def getLocalIp():
         #     for e, ip in Addresses.items():
         #         print("{} ({})".format(e, ip))
         #     return j['addr']
+
+
 #Get range from ip
 def getRange():
     range = ''
     ipAddress = str(getLocalIp())
-    if args.range == None or args.r == 'small':
+    if args.range == None or args.range == 'small':
         range = '.'.join(ipAddress.split(".")[:-1]+["0/24"])
     if args.range == 'big':
         range = '.'.join(ipAddress.split(".")[:-2]+["0.0/16"])
     time.sleep(.5)
     return range
+
+
 #Execute nmap scan on range
-
-def scanner(Range):
+def scanner(range):
+    #Find Hosts and their Open Ports
     livehosts = []
-
-    print('\n'+'Beginning scan on range: ' + Range)
+    print('Scanning on range %s...' % range)
     nm = nmap.PortScanner()
-    nm.scan(hosts=Range, arguments='-n -sP -T5 --min-parallelism 100 --max-parallelism 256')
+    nm.scan(hosts=range, arguments='-n -sn -T5 --min-parallelism 100 --max-parallelism 256')
     hosts_list = [(x, nm[x]['status']['state']) for x in nm.all_hosts()]
     for host, status in hosts_list:
         if status == 'up':
-            #livehosts += [host]
-    #print('\n Found ' + len(livehosts) + ' live hosts...\n')
-            print(host)
+            livehosts.append(host)
+    #Response        
+    print('\nFound %s live hosts...\n' % len(livehosts))
+    for i in livehosts:
+        print(i)
+        #print(nm[i].all_protocols())
 
 
-scanner(getRange())
+#Port Organizer
+def portOrganizer(range):
+
+    #Find Hosts and their Open Ports
+    livehosts = []
+    print('Scanning on range %s...' % range)
+    nm = nmap.PortScanner()
+    nm.scan(hosts=range, arguments='-n -p1-1023 -T5 --min-parallelism 100 --max-parallelism 256')
+    hosts_list = [(x, nm[x]['status']['state']) for x in nm.all_hosts()]
+    for host, status in hosts_list:
+        if status == 'up':
+            livehosts.append(host)
+
+    #Create Organized Dictionaries by IP and by Open Port
+    byIp = {}
+    byPort = {}
+    for i in livehosts:
+        current = []
+        for j in nm[i].all_protocols():
+            for h in nm[i][j].keys():
+                current.append(h)
+                if h in byPort:
+                    byPort[h].append(i)
+                else:
+                    byPort[h] = [i]
+        byIp[i] = current
+
+    #Response (By Port)
+    print("\n----------------------------------------")
+    print("------ Scanned IPs by Open Ports: ------")
+    print("----------------------------------------")
+    for port in byPort:
+        try:
+            print("%s" % getservbyport(int(port)))
+        except:
+            print("port %s" % port)
+        for ip in byPort[port]:
+            print(ip)
+        print("----------------------------------------")
+
+
+#Main Function
+def main():
+    portOrganizer(getRange())
+    #scanner(getRange())
+
+if __name__ == "__main__":
+    main()
 
 
 #range16 =
-
-
 
 #Argument Parser
 

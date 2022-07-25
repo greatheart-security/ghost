@@ -4,4 +4,4 @@ netifaces
 pandas
 tabulate
 time
-nmap
+python-nmap
