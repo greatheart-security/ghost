@@ -8,7 +8,8 @@ import time
 import nmap
 from socket import getservbyname, getservbyport
 
-
+# TEST
+#Argument Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('-ip', '--ipaddress', type=str, help='ex: \'-ip 192.168.1.1\' -The IP Address which to start the search (ie. of your local machine)')
 parser.add_argument('-r','--range', type=str, help='(small, big) ex: \'-r small\' - The IP range which to scan: \n small (defualt) = X.X.X.0/24 | big = X.X.0.0/16)')
